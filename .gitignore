@@ -26,6 +26,16 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# containerization and AWS deployment
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+bentofile.yaml
+deployment_config.yaml
+main.tf
+*.tfstate
+terraform_1.4.6_windows_amd64
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.

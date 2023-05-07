@@ -7,17 +7,19 @@ This is a temporary script file.
 
 import pandas as pd
 import numpy as np
+import bentoml
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
-GLOBAL_PATH = 'C:\\Users\\vivin\\Spyder projects\\klarna\\'
+GLOBAL_PATH = 'C:\\Users\\vivin\\Spyder projects\\def_prediction\\'
 TEST_FRACTION = 0.1
 N_NEIGHBORS = 5
+REFIT = False
 
 y_col = 'default'
 X_cols = ['account_amount_added_12_24m', 'account_days_in_dc_12_24m', 'age', 'num_unpaid_bills']
-X_cols = ['account_days_in_dc_12_24m']
+#X_cols = ['account_days_in_dc_12_24m']
 
 df_raw = pd.read_csv('{}dataset.csv'.format(GLOBAL_PATH), delimiter=";")
 #cleaning: remove nan from output
@@ -30,10 +32,18 @@ X = df_raw[X_cols]
 y = df_raw[y_col]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_FRACTION, random_state=100)
-knn = KNeighborsClassifier(n_neighbors=N_NEIGHBORS)
-knn.fit(X_train, y_train)
+if REFIT:
+    print("generating a fully re-fitted model from scratch")
+    knn = KNeighborsClassifier(n_neighbors=N_NEIGHBORS)
+    knn.fit(X_train, y_train)
+else:
+    print("loading latest fitted model from store")
+    knn = bentoml.sklearn.load_model("knn_initial:latest")
 
 y_pred = knn.predict(X_test)
 
 accuracy = accuracy_score(y_test, y_pred)
 print("Accuracy:", accuracy)
+
+if REFIT:
+    bento_knn = bentoml.sklearn.save_model("knn_initial", knn)
