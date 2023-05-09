@@ -5,26 +5,46 @@ Created on Fri May  5 09:36:47 2023
 @author: vivin
 """
 import bentoml
-import numpy as np
-from bentoml.io import NumpyNdarray, Text
+import pandas as pd
+from io import StringIO
+from bentoml.io import Text, PandasDataFrame, Multipart, JSON
 
-bento_knn = bentoml.models.get("knn_initial:latest")
+bentoml_model_name = 'default_predictor'
+bentoml_model_version = 'latest'
+bentoml_service_name = 'default_classifier_v2'
 
-knn_runner = bento_knn.to_runner()
+
+bento_model = bentoml.models.get("{}:{}".format(bentoml_model_name, bentoml_model_version))
+
+indep_vars = bento_model.info.metadata['indep_vars']
+dep_var = bento_model.info.metadata['dep_var']
+index_col = bento_model.info.metadata['index_col']
+
+bento_runner = bento_model.to_runner()
 
 #create service object
-svc = bentoml.Service("default_classifier", runners=[knn_runner])
+svc = bentoml.Service(bentoml_service_name, runners=[bento_runner])
 
-@svc.api(input=NumpyNdarray(), output=NumpyNdarray())
-def classify(input_series) -> np.ndarray:
-    # Convert the input string to numpy array
-    label = knn_runner.predict.run(input_series)
+@svc.api(input=Multipart(data=Text()), output=PandasDataFrame())
+def run_classify(data):
+    data_file = StringIO(data)
+    data_df = pd.read_csv(data_file, delimiter=";")
+    data_df = data_df[[index_col] + indep_vars]
+    data_df.set_index(index_col, inplace=True)
+    data_df.dropna(how='any', inplace=True)
+    labels = bento_runner.predict_proba.run(data_df)[:,1] #probability of default==1
+    ret_df = pd.DataFrame(data={'uuid':data_df.index.values, 'pd':labels})
+    return ret_df
 
-    return label
-
-@svc.api(input=Text(), output=Text())
-def classify_test(inp):
-    # Convert the input string to numpy array
-    label = "Output is : {}".format(inp)
-
-    return label
+@svc.api(input=JSON(), output=PandasDataFrame())
+def run_classify_json(inp_json):    
+    data_df = pd.read_json(inp_json)
+    data_df = data_df[[index_col] + indep_vars]
+    data_df.set_index(index_col, inplace=True)
+    data_df.dropna(how='any', inplace=True)
+    labels = bento_runner.predict_proba.run(data_df)[:,1] #probability of default==1
+    ret_df = pd.DataFrame(data={'uuid':data_df.index.values, 'pd':labels})
+    
+    return ret_df
+    
+    
