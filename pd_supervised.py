@@ -146,13 +146,14 @@ class DEFAULT_PREDICTOR_VANILLA(object):
     def __bentoml_save_model(self):
         if self.refit and self.save_model:
             print("saving-down the model as a bentoml object")
+            pca_model_name = "PCA_{}".format(self.bentoml_model_name)
             metadata = {
                 'indep_vars': self.X_cols, 
                 'dep_var': self.y_col, 
                 'index_col': self.index_col,
                 'categories': self.categories,
                 'use_pca_transform': self.use_pca_transform,
-                'pca_model_name': "PCA_{}".format(self.bentoml_model_name)
+                'pca_model_name': pca_model_name if self.use_pca_transform else None
             }
             if self.bentoml_model_class == "sklearn":
                 _ = bentoml.sklearn.save_model(self.bentoml_model_name, self.model, metadata=metadata, signatures={'predict_proba': {}, 'predict': {}})
@@ -163,7 +164,7 @@ class DEFAULT_PREDICTOR_VANILLA(object):
                 
             if self.use_pca_transform:
                 #save-down the pca model as well
-                _ = bentoml.sklearn.save_model("PCA_{}".format(self.bentoml_model_name), self.pca_model, metadata=metadata, signatures={'transform': {}})
+                _ = bentoml.sklearn.save_model(pca_model_name, self.pca_model, metadata=metadata, signatures={'transform': {}})
                 
 
     def construct_model(self):
@@ -252,8 +253,8 @@ if __name__ == "__main__":
     parser.add_argument('--bentoml_config_name', default='default_predict_with_pca')
     parser.add_argument('--dataset_filename', default='dataset')
     parser.add_argument('--test_fraction', default=0.1, type=float)
-    parser.add_argument('--refit', default='True', type=str)
-    parser.add_argument('--save_model', default='True', type=str)
+    parser.add_argument('--refit', default='False', type=str)
+    parser.add_argument('--save_model', default='False', type=str)
     args = parser.parse_args()
     
     predictor = DEFAULT_PREDICTOR_VANILLA(
