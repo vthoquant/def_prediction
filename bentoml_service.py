@@ -20,19 +20,27 @@ bento_model = bentoml.models.get("{}:{}".format(bentoml_model_name, bentoml_mode
 indep_vars = bento_model.info.metadata['indep_vars']
 dep_var = bento_model.info.metadata['dep_var']
 index_col = bento_model.info.metadata['index_col']
+feature_selector = bento_model.info.metadata.get('feature_selector', "")
+feature_selector_model_name = bento_model.info.metadata.get('feature_selector_model_name', "")
 use_pca = bento_model.info.metadata.get('use_pca_transform', False)
 pca_model_name = bento_model.info.metadata.get('pca_model_name', None)
 categories = bento_model.info.metadata.get('categories', {})
 
 bento_runner = bento_model.to_runner()
+all_runners = [bento_runner]
+
+if feature_selector != "":
+    fs_model = bentoml.models.get("{}:{}".format(feature_selector_model_name, "latest"))
+    fs_runner = fs_model.to_runner()
+    all_runners.append(fs_runner)
+
 if use_pca:
     pca_model = bentoml.models.get("{}:{}".format(pca_model_name, "latest"))
     pca_runner = pca_model.to_runner()
-    #create service object
-    svc = bentoml.Service(bentoml_service_name, runners=[bento_runner, pca_runner])
-else:
-    #create service object
-    svc = bentoml.Service(bentoml_service_name, runners=[bento_runner])
+    all_runners.append(pca_runner)
+
+#create service object
+svc = bentoml.Service(bentoml_service_name, runners=all_runners)
 
 
 @svc.api(input=Multipart(data=Text()), output=PandasDataFrame())
@@ -46,7 +54,9 @@ def run_classify(data):
     for col_name, cat_names in categories.items():
         LE = LabelEncoder()
         LE.fit(cat_names)
-        data_df.loc[:, col_name] = LE.transform(data_df.loc[:, col_name]) 
+        data_df.loc[:, col_name] = LE.transform(data_df.loc[:, col_name])
+    if feature_selector is not None:
+        data_df = fs_runner.transform.run(data_df)
     if use_pca:
         data_df = pca_runner.transform.run(data_df)
     labels = bento_runner.predict_proba.run(data_df)[:,1] #probability of default==1
@@ -63,7 +73,9 @@ def run_classify_json(inp_json):
     for col_name, cat_names in categories.items():
         LE = LabelEncoder()
         LE.fit(cat_names)
-        data_df.loc[:, col_name] = LE.transform(data_df.loc[:, col_name]) 
+        data_df.loc[:, col_name] = LE.transform(data_df.loc[:, col_name])
+    if feature_selector is not None:
+        data_df = fs_runner.transform.run(data_df)
     if use_pca:
         data_df = pca_runner.transform.run(data_df)
     labels = bento_runner.predict_proba.run(data_df)[:,1] #probability of default==1

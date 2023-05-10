@@ -62,6 +62,8 @@ class DEFAULT_PREDICTOR_VANILLA(object):
         self.categories = {}
         self.use_pca_transform = self.var_config.get("use_pca_transform", False)
         self.pca_model = None
+        self.feature_selector = self.var_config.get("feature_selector", None)
+        self.feature_selector_model = None
         
         #test and train data
         self.load_train_test_data()
@@ -95,13 +97,38 @@ class DEFAULT_PREDICTOR_VANILLA(object):
                 
     def __variable_dim_reduction(self):
         if self.use_pca_transform:
-            #hardcode variances for now
-            from sklearn.decomposition import PCA
-            clf = PCA(0.95, whiten=True, svd_solver='full')
+            if not self.refit:
+                # the pca model would have alreayd been stored in bento
+                bentoml_pca_model_name = "pca_{}".format(self.bentoml_model_name)
+                clf = bentoml.sklearn.load_model("{}:{}".format(bentoml_pca_model_name, "latest"))
+            else:
+                #hardcode variances for now
+                from sklearn.decomposition import PCA
+                clf = PCA(0.95, whiten=True, svd_solver='full')
             X_train_new = clf.fit_transform(self.X_train)
             #X_cols_pca = np.arange(1, len(X_train_new.columns.values), 1)
             self.X_train = X_train_new
             self.pca_model = clf
+            
+    def __feature_selection(self):
+        if self.feature_selector is not None:
+            if not self.refit:
+                bentoml_fs_model_name = "fs_{}".format(self.bentoml_model_name)
+                self.feature_selector_model = bentoml.sklearn.load_model("{}:{}".format(bentoml_fs_model_name, "latest"))
+            else:
+                feature_selector_type = self.feature_selector.split("_")[0]
+                feature_selector_args = self.feature_selector.split("_")[1].split(":")
+                if feature_selector_type == "sequential":
+                    from sklearn.feature_selection import SequentialFeatureSelector
+                    self.construct_model() #construct model first to train the sequential feature selector on
+                    self.feature_selector_model = SequentialFeatureSelector(
+                        self.model, n_features_to_select=int(feature_selector_args[0]), direction=feature_selector_args[1]
+                    ).fit(self.X_train, self.y_train)
+                else:
+                    raise AttributeError("incorrect value passed as a feature selector")
+            
+            #generate X_test with fewer features
+            self.X_train = self.feature_selector_model.transform(self.X_train)
             
     def load_train_test_data(self):
         df_raw = pd.read_csv('{}datasets\\{}.csv'.format(self.GLOBAL_PATH, self.dataset_filename), delimiter=";")
@@ -126,6 +153,7 @@ class DEFAULT_PREDICTOR_VANILLA(object):
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=self.test_fraction, random_state=100)
         self.__imbalance_handling()
+        self.__feature_selection()
         self.__variable_dim_reduction()
         
     def fit(self):
@@ -147,13 +175,16 @@ class DEFAULT_PREDICTOR_VANILLA(object):
         if self.refit and self.save_model:
             print("saving-down the model as a bentoml object")
             pca_model_name = "PCA_{}".format(self.bentoml_model_name)
+            feature_selector_model_name = "FS_{}".format(self.bentoml_model_name)
             metadata = {
                 'indep_vars': self.X_cols, 
                 'dep_var': self.y_col, 
                 'index_col': self.index_col,
                 'categories': self.categories,
                 'use_pca_transform': self.use_pca_transform,
-                'pca_model_name': pca_model_name if self.use_pca_transform else None
+                'pca_model_name': pca_model_name if self.use_pca_transform else "",
+                "feature_selector": self.feature_selector if self.feature_selector is not None else "",
+                "feature_selector_model_name": feature_selector_model_name if self.feature_selector is not None else ""
             }
             if self.bentoml_model_class == "sklearn":
                 _ = bentoml.sklearn.save_model(self.bentoml_model_name, self.model, metadata=metadata, signatures={'predict_proba': {}, 'predict': {}})
@@ -161,6 +192,9 @@ class DEFAULT_PREDICTOR_VANILLA(object):
                 _ = bentoml.xgboost.save_model(self.bentoml_model_name, self.model, metadata=metadata, signatures={'predict_proba': {}, 'predict': {}})
             else:
                 raise AttributeError("unknown bentoml_model_class")
+                
+            if self.feature_selector is not None:
+                _ = bentoml.sklearn.save_model(feature_selector_model_name, self.feature_selector_model, metadata=metadata, signatures={'transform': {}})
                 
             if self.use_pca_transform:
                 #save-down the pca model as well
@@ -239,18 +273,18 @@ class DEFAULT_PREDICTOR_VANILLA(object):
         print("recall:", recall)
         
     def model_predict(self, X_test):
+        if self.feature_selector is not None:
+            X_test = self.feature_selector_model.transform(X_test)
         if self.use_pca_transform:
-            X_test_trans = self.pca_model.transform(X_test)
-            y_pred = self.model.predict(X_test_trans)
-        else:
-            y_pred = self.model.predict(X_test)
+            X_test = self.pca_model.transform(X_test)
+        y_pred = self.model.predict(X_test)
         return y_pred
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='parse arguments')
     parser.add_argument('--model_config_name', default='random_forest')
     parser.add_argument('--var_config_name', default='all_indeps_dsample')
-    parser.add_argument('--bentoml_config_name', default='default_predict_with_pca')
+    parser.add_argument('--bentoml_config_name', default='default_predict_test')
     parser.add_argument('--dataset_filename', default='dataset')
     parser.add_argument('--test_fraction', default=0.1, type=float)
     parser.add_argument('--refit', default='False', type=str)

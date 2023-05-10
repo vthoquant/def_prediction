@@ -60,6 +60,7 @@ ALLINDEPS_DNSAMPLE = {
     },
     "categories_convert": ["merchant_category", "merchant_group", "name_in_email"],
     "use_pca_transform": True,
+    #"feature_selector": "sequential_2:forward"
 }
 
 VARS_COMBOS = {
