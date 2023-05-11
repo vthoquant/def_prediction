@@ -181,6 +181,7 @@ class DEFAULT_PREDICTOR_VANILLA(object):
                 'dep_var': self.y_col, 
                 'index_col': self.index_col,
                 'categories': self.categories,
+                'na_fill_cols': self.na_fill_cols,
                 'use_pca_transform': self.use_pca_transform,
                 'pca_model_name': pca_model_name if self.use_pca_transform else "",
                 "feature_selector": self.feature_selector if self.feature_selector is not None else "",

@@ -5,26 +5,47 @@ Created on Sun May  7 18:07:31 2023
 @author: vivin
 """
 
-DEFAULT_PREDICT_MODELS_SKLEARN = {
-    "model_name": "default_predictor",
+PD_PREDICT_RF_DSAMPLE_SEQ5 = {
+    "model_name": "pd_predict_rf_ds_seq5",
     "version": "latest",
     "model_class": "sklearn"
 }
 
-DEFAULT_PREDICT_MODELS_SKLEARN_PCA = {
-    "model_name": "default_predictor_w_pca",
+PD_PREDICT_RF_USAMPLE_SEQ5 = {
+    "model_name": "pd_predict_rf_us_seq5",
     "version": "latest",
     "model_class": "sklearn"
 }
 
-DEFAULT_PREDICT_MODELS_SKLEARN_TEST = {
-    "model_name": "default_predictor_test",
+PD_PREDICT_RF_DSAMPLE_SEQ10 = {
+    "model_name": "pd_predict_rf_ds_seq10",
+    "version": "latest",
+    "model_class": "sklearn"
+}
+
+PD_PREDICT_RF_USAMPLE_SEQ10 = {
+    "model_name": "pd_predict_rf_us_seq10",
+    "version": "latest",
+    "model_class": "sklearn"
+}
+
+PD_PREDICT_RF_DSAMPLE = {
+    "model_name": "pd_predict_rf_ds",
+    "version": "latest",
+    "model_class": "sklearn"
+}
+
+PD_PREDICT_RF_USAMPLE = {
+    "model_name": "pd_predict_rf_us",
     "version": "latest",
     "model_class": "sklearn"
 }
 
 BENTOML_STORE = {
-    "default_predict": DEFAULT_PREDICT_MODELS_SKLEARN,
-    "default_predict_with_pca": DEFAULT_PREDICT_MODELS_SKLEARN_PCA,
-    "default_predict_test": DEFAULT_PREDICT_MODELS_SKLEARN_TEST,
+    "pd_predict_rf_ds_seq5": PD_PREDICT_RF_DSAMPLE_SEQ5,
+    "pd_predict_rf_us_seq5": PD_PREDICT_RF_USAMPLE_SEQ5,
+    "pd_predict_rf_ds_seq10": PD_PREDICT_RF_DSAMPLE_SEQ10,
+    "pd_predict_rf_us_seq10": PD_PREDICT_RF_USAMPLE_SEQ10,
+    "pd_predict_rf_ds": PD_PREDICT_RF_DSAMPLE,
+    "pd_predict_rf_us": PD_PREDICT_RF_USAMPLE
 }

@@ -34,6 +34,7 @@ bentofile.yaml
 deployment_config.yaml
 main.tf
 *.tfstate
+*.tfstate.backup
 terraform_1.4.6_windows_amd64
 
 # PyInstaller
