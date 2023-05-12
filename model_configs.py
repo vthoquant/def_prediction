@@ -33,9 +33,18 @@ RF_CLASSIFIER = {
     }
 }
 
+LOGIT_CLASSIFIER = {
+    "model": "LogisticRegression",
+    "params": {
+        "class_weight": "balanced",
+        "max_iter": 1000
+    }
+}
+
 ALL_MODELS = {
     "knn_base": KNN_BASE,
     "svc_base": SVC_BASE,
     "svc_balanced": SVC_BALANCED,
-    "random_forest": RF_CLASSIFIER
+    "random_forest": RF_CLASSIFIER,
+    "logistic_regr": LOGIT_CLASSIFIER
 }

@@ -15,6 +15,53 @@ DEFAULT_PROBABIITY_PREDICTION_TEST = {
     }
 }
 
+ALLINDEPS = {
+    "index": "uuid",
+    "dep_var": "default",
+    "na_fill_cols": {
+        "account_days_in_dc_12_24m": -1,
+        "account_days_in_rem_12_24m": -1,
+        "account_days_in_term_12_24m": -1,
+        "account_incoming_debt_vs_paid_0_24m": -1,
+        "account_status": -1,
+        "account_worst_status_0_3m": -1,
+        "account_worst_status_12_24m": -1,
+        "account_worst_status_3_6m": -1,
+        "account_worst_status_6_12m": -1,
+        "avg_payment_span_0_12m": -1,
+        "avg_payment_span_0_3m": -1,
+        "num_active_div_by_paid_inv_0_12m": -1,        
+        "num_arch_written_off_0_12m": -1,
+        "num_arch_written_off_12_24m": -1,
+        "worst_status_active_inv": -1,
+    },
+    "categories_convert": ["merchant_category", "merchant_group", "name_in_email"],
+}
+
+ALLINDEPS_PCA = {
+    "index": "uuid",
+    "dep_var": "default",
+    "na_fill_cols": {
+        "account_days_in_dc_12_24m": -1,
+        "account_days_in_rem_12_24m": -1,
+        "account_days_in_term_12_24m": -1,
+        "account_incoming_debt_vs_paid_0_24m": -1,
+        "account_status": -1,
+        "account_worst_status_0_3m": -1,
+        "account_worst_status_12_24m": -1,
+        "account_worst_status_3_6m": -1,
+        "account_worst_status_6_12m": -1,
+        "avg_payment_span_0_12m": -1,
+        "avg_payment_span_0_3m": -1,
+        "num_active_div_by_paid_inv_0_12m": -1,        
+        "num_arch_written_off_0_12m": -1,
+        "num_arch_written_off_12_24m": -1,
+        "worst_status_active_inv": -1,
+    },
+    "categories_convert": ["merchant_category", "merchant_group", "name_in_email"],
+    "use_pca_transform": True
+}
+
 ALLINDEPS_DNSAMPLE_SEQ5 = {
     "index": "uuid",
     "dep_var": "default",
@@ -177,4 +224,6 @@ VARS_COMBOS = {
     "all_indeps_usample_seq10": ALLINDEPS_UPSAMPLE_SEQ10,
     "all_indeps_dsample": ALLINDEPS_DNSAMPLE,
     "all_indeps_usample": ALLINDEPS_UPSAMPLE,
+    "all_indeps": ALLINDEPS,
+    "all_indeps_pca": ALLINDEPS_PCA,
 }

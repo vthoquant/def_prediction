@@ -41,11 +41,18 @@ PD_PREDICT_RF_USAMPLE = {
     "model_class": "sklearn"
 }
 
+PD_PREDICT_LR_BAL = {
+    "model_name": "pd_predict_lr_bal",
+    "version": "latest",
+    "model_class": "sklearn"
+}
+
 BENTOML_STORE = {
     "pd_predict_rf_ds_seq5": PD_PREDICT_RF_DSAMPLE_SEQ5,
     "pd_predict_rf_us_seq5": PD_PREDICT_RF_USAMPLE_SEQ5,
     "pd_predict_rf_ds_seq10": PD_PREDICT_RF_DSAMPLE_SEQ10,
     "pd_predict_rf_us_seq10": PD_PREDICT_RF_USAMPLE_SEQ10,
     "pd_predict_rf_ds": PD_PREDICT_RF_DSAMPLE,
-    "pd_predict_rf_us": PD_PREDICT_RF_USAMPLE
+    "pd_predict_rf_us": PD_PREDICT_RF_USAMPLE,
+    "pd_predict_lr_bal": PD_PREDICT_LR_BAL
 }
