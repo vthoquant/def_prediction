@@ -7,6 +7,7 @@ Created on Thu May 11 16:17:11 2023
 
 import bentoml
 import pandas as pd
+import numpy as np
 from io import StringIO
 from bentoml.io import Text, PandasDataFrame, Multipart
 from sklearn.preprocessing import LabelEncoder
@@ -74,18 +75,21 @@ svc = bentoml.Service(bentoml_service_name, runners=all_runners)
 def run_classify(data, model_tag):
     data_file = StringIO(data)
     data_df = pd.read_csv(data_file, delimiter=";")
-    ret_df = predict_on_input_df(data_df, model_tag, index_col_by_modelname, indep_vars_by_modelname, na_fill_cols_by_modelname, categories_by_modelname, use_pca_by_modelname, feature_selector_tag_by_modelname, bento_runner_by_modelname, fs_runner_by_modelname, pca_runner_by_modelname)
+    ret_df = predict_on_input_df(data_df, model_tag, index_col_by_modelname, indep_vars_by_modelname, dep_var_by_modelname, na_fill_cols_by_modelname, categories_by_modelname, use_pca_by_modelname, feature_selector_tag_by_modelname, bento_runner_by_modelname, fs_runner_by_modelname, pca_runner_by_modelname)
     
     return ret_df
 
 
-def predict_on_input_df(data_df, model_tag, index_col_by_modelname, indep_vars_by_modelname, na_fill_cols_by_modelname, categories_by_modelname, use_pca_by_modelname, feature_selector_tag_by_modelname, bento_runner_by_modelname, fs_runner_by_modelname, pca_runner_by_modelname):
+def predict_on_input_df(data_df, model_tag, index_col_by_modelname, indep_vars_by_modelname, dep_var_by_modelname, na_fill_cols_by_modelname, categories_by_modelname, use_pca_by_modelname, feature_selector_tag_by_modelname, bento_runner_by_modelname, fs_runner_by_modelname, pca_runner_by_modelname):
     index_col = index_col_by_modelname[model_tag]
     indep_vars = indep_vars_by_modelname[model_tag]
+    dep_var = dep_var_by_modelname[model_tag]
     na_fill_cols = na_fill_cols_by_modelname[model_tag]
     categories = categories_by_modelname[model_tag]
     use_pca = use_pca_by_modelname[model_tag]
     feature_selector = feature_selector_tag_by_modelname[model_tag]
+    #only predict on those datapoints where the dep_var is null/NA
+    data_df = data_df[np.isnan(data_df[dep_var])]
     data_df = data_df[[index_col] + indep_vars]
     data_df.set_index(index_col, inplace=True)
     data_clean(data_df, na_fill_cols)
